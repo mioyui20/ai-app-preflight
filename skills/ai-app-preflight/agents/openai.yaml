@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI App Preflight"
+  short_description: "Review AI endpoints with evidence and local retests"
+  default_prompt: "Use $ai-app-preflight to review this AI app before release and report evidence, open questions, and local retests."

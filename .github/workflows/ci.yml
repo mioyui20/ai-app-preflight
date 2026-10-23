@@ -1,0 +1,39 @@
+name: Validate Skill
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evidence:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.10'
+          - os: ubuntu-latest
+            python: '3.12'
+          - os: windows-latest
+            python: '3.12'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -B -m unittest discover -s tests -p 'test_*.py' -v
+      - run: python skills/ai-app-preflight/scripts/collect_evidence.py examples/before --format json
+      - run: python skills/ai-app-preflight/scripts/collect_evidence.py examples/after --lang zh
+  examples:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test tests/routes.test.mjs tests/template-budget.test.mjs

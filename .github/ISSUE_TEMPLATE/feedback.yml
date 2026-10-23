@@ -1,0 +1,22 @@
+name: Reproduction or false positive / 复现或误报
+description: Improve evidence quality with a minimal example / 用最小案例改善证据质量
+body:
+  - type: markdown
+    attributes:
+      value: Remove keys, private source and sensitive inputs. Do not attach live .env files. / 请移除密钥、私有源码和敏感输入，不要上传真实 .env。
+  - type: textarea
+    id: scenario
+    attributes:
+      label: What happened? / 发生了什么？
+      description: Include the command or Skill request and expected versus observed behavior. / 包括命令或提问、预期与实际结果。
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal fake-data reproduction / 使用假数据的最小复现
+      render: text
+  - type: input
+    id: environment
+    attributes:
+      label: Agent, OS, Python version / 工具、系统及 Python 版本
