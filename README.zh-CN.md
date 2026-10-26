@@ -1,8 +1,10 @@
 <h1 align="center">AI App Preflight</h1>
-<p align="center"><strong>AI 应用发布前，把容易出事故的请求链路查清楚。</strong><br>一个带离线证据脚本的 Agent Skill，聚焦 AI 接口四类上线问题。</p>
-<p align="center"><a href="README.md">English</a> · <a href="#安装-skill">安装</a> · <a href="#无需模型密钥的演示">免密钥演示</a> · <a href="skills/ai-app-preflight/SKILL.md">查看 Skill 指令</a></p>
+<p align="center"><strong>在用户遇到问题前，查清 AI 请求的失败路径。</strong><br>追踪密钥、最终输入预算、取消处理和模型输出，给出文件行号依据。</p>
+<p align="center"><a href="README.md">English</a> · <a href="#一分钟免密钥演示">运行演示</a> · <a href="#安装-skill">安装</a> · <a href="docs/case-study.zh-CN.md">真实案例</a> · <a href="skills/ai-app-preflight/SKILL.md">查看 Skill 指令</a></p>
 
 AI 功能在演示中能正常回答，并不意味着密钥、成本、中断处理和输出校验已经处理妥当。这个 Skill 帮助 AI 编程助手检查四条边界，并给出**文件行号 → 失败场景 → 修复建议 → 本地复测**。
+
+**一个真实例子：**在维护者自己的 PromptCanary 中，约 **24 KB 的测试集展开成了 16 MB 的提示词**。Skill 的审查流程追踪到了这条路径；附带的修复示例会在启动模型工作前拒绝超限输入。[查看固定版本的源码证据与局限](docs/case-study.zh-CN.md)。
 
 | 检查方向 | 关注什么 |
 | --- | --- |
@@ -12,6 +14,24 @@ AI 功能在演示中能正常回答，并不意味着密钥、成本、中断�
 | 输出边界 | JSON 解析、结构校验与业务语义检查的区别 |
 
 它会根据实际用途判断：本地工具与公开计费服务需要的控制措施不同。**脚本收集线索，AI 阅读上下文后确认。** 不把关键词命中当成漏洞，也不把零命中当成安全认证；不提供虚构安全分数、不自动部署、不默认调用付费模型。
+
+## 一分钟免密钥演示
+
+需要 Node.js **20.19+**；克隆后无需 npm install、密钥或联网：
+
+```bash
+git clone https://github.com/mioyui20/ai-app-preflight.git
+cd ai-app-preflight
+node examples/prompt-expansion/demo.mjs --lang zh
+```
+
+| 同一组输入 | 修复前 | 使用示例预算后 |
+| --- | ---: | ---: |
+| 提交给本地模型替身的字节数 | 15,996,000 | 0 |
+| 超限提示词的替身调用次数 | 1 | 0 |
+| 正常中英文输入 | — | 可用 |
+
+演示实际执行两种渲染器并检查结果。省略 `--lang zh` 可查看英文，加 `--json` 可输出结构化结果。**真实模型调用为零。** 32 KiB 仅是示例预算，字节数不等于 Token 或真实费用；该复现不会修改 PromptCanary 项目。
 
 ## 安装 Skill
 
@@ -46,14 +66,11 @@ npx skills add mioyui20/ai-app-preflight --skill ai-app-preflight
 
 Claude Code 可使用 `/ai-app-preflight` 后接审查请求。这是可安装到 AI 编程助手的独立 Skill，不是双击运行的桌面软件，也不是已经上架应用商店的插件。Skill 的指令要求使用用户的语言回复。
 
-## 无需模型密钥的演示
+## 检查自己的应用
 
 证据脚本需要 **Python 3.10+**，无需安装 pip 依赖；命令也可根据环境改为 `python3` 或 `py -3`。
 
 ```bash
-git clone https://github.com/mioyui20/ai-app-preflight.git
-cd ai-app-preflight
-
 python skills/ai-app-preflight/scripts/collect_evidence.py examples/before --lang zh
 python skills/ai-app-preflight/scripts/collect_evidence.py examples/after --lang zh
 python skills/ai-app-preflight/scripts/collect_evidence.py /你的项目路径 --format json
@@ -66,11 +83,13 @@ python skills/ai-app-preflight/scripts/collect_evidence.py /你的项目路径 -
 接口行为演示需要 Node.js 20.19+，无需 npm install：
 
 ```bash
-node --test tests/routes.test.mjs tests/template-budget.test.mjs
+node --test tests/routes.test.mjs tests/template-budget.test.mjs tests/prompt-expansion.test.mjs
 python -B -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 测试使用本地替身，覆盖调用模型前拒绝非法请求、额度失败、超大请求体、错误结构、超时、取消和错误脱敏。另附最终输入预算示例，阻止重复占位符把小输入展开成大请求。
+
+首次试用建议：在自己的应用中安装 Skill，用上面的提问运行一次审查，阅读有源码依据的问题与待核实项，再[反馈一个脱敏结果](https://github.com/mioyui20/ai-app-preflight/issues/new?template=trial-feedback.yml)。没发现问题、漏报和安装卡点同样有价值。工具不会自动上传报告。
 
 ## 包内结构
 
@@ -85,6 +104,8 @@ skills/ai-app-preflight/
 
 脚本支持 JSON 和中英文 Markdown，报告相对路径与行号，不输出源码行或密钥值。`leads` 是复核线索，`signals` 是相关代码位置；出站 Authorization 与调用者鉴权标记分别记录，但不能仅靠标记证明鉴权有效。JSON 解析也与 schema 标记分开；手工实现的结构校验可能没有对应关键词。
 
+v1.1 新增 `network_call`、`input_assembly`、`input_measurement`，帮助定位原生 `fetch`、拼接/替换和字节测量。这些中性标记也可能出现在普通非 AI 代码中，需要 AI 继续追踪是否与模型请求有关。JSON 原有字段及 schema version 1 保持兼容。
+
 退出码 `0` 表示收集过程完成，即使存在待审线索；`2` 表示参数或根目录读取错误。部分扫描同样可能退出 `0`，必须读取覆盖范围、截断和跳过原因。它不是自动阻止发布的 CI 安全闸门。
 
 ## 边界与局限
@@ -97,6 +118,8 @@ skills/ai-app-preflight/
 - AI 助手仍需要自身宿主提供的模型与权限。脚本离线不等于整个 AI 助手无需模型。
 
 欢迎带真实复现和回归测试的小改进，参见[贡献指南](CONTRIBUTING.md)。
+
+[v1.1 更新记录](CHANGELOG.md) · [反馈复现或误报](https://github.com/mioyui20/ai-app-preflight/issues/new?template=feedback.yml) · [首次试用反馈](https://github.com/mioyui20/ai-app-preflight/issues/new?template=trial-feedback.yml)
 
 参考：[Agent Skills 标准](https://agentskills.io/specification)、[Codex 技能说明](https://learn.chatgpt.com/docs/build-skills)、[OWASP 无边界消耗](https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/)、[AI SDK 生命周期](https://ai-sdk.dev/docs/ai-sdk-core/error-handling)。本项目独立维护，不代表这些组织的官方产品或背书。
 

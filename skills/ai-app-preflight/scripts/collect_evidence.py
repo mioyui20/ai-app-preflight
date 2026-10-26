@@ -69,6 +69,12 @@ PLACEHOLDER = re.compile(
 # Labels are fixed identifiers, never captured code or argument values.
 # They describe markers that were seen, not guarantees about implementation.
 SIGNAL_PATTERNS = (
+    # These are navigation aids, not proof of a model call or an enforced cap.
+    ("network_call", "fetch", r"\bfetch\s*\("),
+    ("input_assembly", "replaceAll", r"\.\s*replaceAll\s*\("),
+    ("input_assembly", "join", r"\.\s*join\s*\("),
+    ("input_measurement", "Buffer.byteLength", r"\bBuffer\s*\.\s*byteLength\s*\("),
+    ("input_measurement", "TextEncoder.encode", r"\bnew\s+TextEncoder\s*\(\s*\)\s*\.\s*encode\s*\("),
     ("provider_call", "responses.create", r"\bresponses\s*\.\s*create\s*\("),
     ("provider_call", "chat.completions.create", r"\bchat\s*\.\s*completions\s*\.\s*create\s*\("),
     ("provider_call", "messages.create", r"\bmessages\s*\.\s*create\s*\("),

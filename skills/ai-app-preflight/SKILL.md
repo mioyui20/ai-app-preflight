@@ -2,6 +2,8 @@
 name: ai-app-preflight
 description: Review AI API routes before deployment for client-side credential exposure, unbounded model spending, timeout/cancellation handling, and structured-output validation. Use for an explicitly requested AI endpoint readiness or reliability review; not for ordinary feature development, general repository cleanup, or automatic deployment.
 license: MIT
+metadata:
+  version: "1.1.0"
 ---
 
 # AI App Preflight
@@ -26,6 +28,8 @@ The helper reads bounded source text, does not execute target code, and needs no
 
 Read `coverage`, skipped files, truncation, and `limitations` before interpreting results. `leads` are review candidates; `signals` are locations of related code. A keyword match is not a confirmed vulnerability, and missing keywords are not proof that a control is absent. Example/test files are not evidence of deployed exposure.
 
+For apps using raw HTTP, follow `network_call` markers to the actual provider adapter. `fetch` can also serve unrelated requests. Follow `input_assembly` and `input_measurement` markers to check whether the **final** prompt is capped before provider work; a `join`, `replaceAll`, or byte measurement alone establishes neither a bug nor an effective limit.
+
 Inspect the surrounding source and follow imports, wrappers, shared middleware, provider settings, and documented gateway controls. Read only the relevant sections of [the review guide](references/review-guide.md). In particular:
 
 - **Credential boundary:** trace a provider secret to the browser bundle or response, rather than assuming every token or public identifier is secret. Never include its value in a report.
@@ -37,7 +41,7 @@ Use **confirmed**, **needs verification**, and **not applicable** to separate co
 
 ## Return a useful review
 
-Lead with one of: **hold for confirmed issues**, **verification needed**, or **no blocker found in reviewed scope**. The last phrase is bounded by inspected evidence, not a deployment approval.
+Lead with one of: **hold for confirmed issues**, **verification needed**, or **no blocker found in reviewed scope**. Choose hold when a confirmed issue blocks the intended deployment; a non-blocking improvement in a local tool can coexist with no blocker found. Explain that distinction and keep unknown deployment facts open. No blocker found is bounded by inspected evidence, not a deployment approval.
 
 For each actionable finding, include its priority, status, repository-relative `file:line` evidence, a concrete failure scenario, the smallest appropriate remediation, and a local retest. Prefer a few material findings over a long checklist of generic advice. List the four areas with verified controls or open questions; state what was skipped, assumed, and actually tested.
 

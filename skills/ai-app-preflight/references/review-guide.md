@@ -16,6 +16,10 @@ Use the sections relevant to the routes under review. These are evidence questio
 
 Check the final model request after template substitution, retrieved context and conversation history are added. Small raw fields can multiply into a much larger prompt when a placeholder occurs repeatedly. Enforce the assembled-input budget before allocating or sending oversized expansions; an HTTP body limit alone does not establish this boundary.
 
+Concrete example: 1,333 copies of `{{input}}` fit in an 11,997-character template. Substituting a 12,000-character ASCII input produces 15,996,000 bytes. A 512 KB HTTP body cap and a model output-token cap do not constrain that expansion. A pre-allocation check can compute `fixed UTF-8 bytes + occurrence count × input UTF-8 bytes`, then reject before joining or calling a provider. Choose a budget appropriate to the application; UTF-8 bytes are not model tokens or a billing estimate. Preserve literal replacement text such as `$&` and valid repeated placeholders.
+
+For raw `fetch` adapters, inspect the request URL, message construction and actual body/signal arguments. The helper's `network_call`, `input_assembly` and `input_measurement` markers are navigation aids; unrelated downloads, joins and unused measurements may match. A zero-lead report still requires this trace.
+
 **Do not infer:** an outbound `Authorization: Bearer ...` header does not authenticate an inbound user. A per-process counter does not establish a shared quota across server replicas. An output-token cap does not bound request volume or input context. Missing code keywords do not establish the absence of gateway limits.
 
 **Retest:** missing authentication when the route requires it; over-limit body; exhausted quota; parallel requests against the same quota; provider rejection and retries. Use a counting stub and verify rejected requests do not start model work. Avoid sending concurrency tests to real providers or public endpoints.

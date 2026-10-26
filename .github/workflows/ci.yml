@@ -27,13 +27,21 @@ jobs:
       - run: python skills/ai-app-preflight/scripts/collect_evidence.py examples/before --format json
       - run: python skills/ai-app-preflight/scripts/collect_evidence.py examples/after --lang zh
   examples:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [20, 22]
+        include:
+          - os: ubuntu-latest
+            node: 20
+          - os: ubuntu-latest
+            node: 22
+          - os: windows-latest
+            node: 22
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-      - run: node --test tests/routes.test.mjs tests/template-budget.test.mjs
+      - run: node --test tests/routes.test.mjs tests/template-budget.test.mjs tests/prompt-expansion.test.mjs
+      - run: node examples/prompt-expansion/demo.mjs --lang en
+      - run: node examples/prompt-expansion/demo.mjs --lang zh

@@ -1,0 +1,53 @@
+name: First review feedback / 首次试用反馈
+description: Tell us whether the Skill helped with a real app / 反馈一次真实项目中的使用体验
+title: "[Trial] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A review with no findings is useful feedback too. Share redacted summaries or public code only; no keys, private source, live .env files or personal data.
+        没发现问题也值得反馈。仅分享脱敏总结或公开代码，不要提供密钥、私有源码、真实 .env 或个人信息。
+  - type: input
+    id: environment
+    attributes:
+      label: Skill version, agent and OS / Skill 版本、AI 助手与系统
+      placeholder: "v1.1.0, Codex, Windows 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: App deployment / 应用运行方式
+      options:
+        - Local tool / 本地工具
+        - Authenticated service / 需登录的服务
+        - Public demo / 公开演示
+        - Not decided / 尚未决定
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Review outcome / 审查结果
+      options:
+        - Confirmed a useful issue / 确认了有价值的问题
+        - No confirmed issue / 没有确认的问题
+        - False positive or missed issue / 有误报或遗漏
+        - Could not finish installation or review / 安装或审查未完成
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: What helped or got in the way? / 哪一步有用或遇到了什么困难？
+      description: Include your request and one redacted example, if available. / 可附提问方式和一个脱敏例子。
+    validations:
+      required: true
+  - type: dropdown
+    id: reuse
+    attributes:
+      label: Would you use it before another release? / 下次发布前还会使用吗？
+      options:
+        - Yes / 会
+        - Maybe, with changes / 改进后可能会
+        - No / 不会

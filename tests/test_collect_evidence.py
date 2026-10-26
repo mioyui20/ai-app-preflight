@@ -77,6 +77,36 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual({item["kind"] for item in signals}, {"json_parse"})
         self.assertEqual({item["symbol"] for item in signals}, {"JSON.parse", "json.loads"})
 
+    def test_raw_fetch_and_prompt_assembly_are_navigation_not_findings(self):
+        self.write("src/provider.js", "\n".join([
+            'const prompt = template.replaceAll("{{input}}", () => input);',
+            'const response = await fetch(endpoint, {body: JSON.stringify({prompt})});',
+        ]))
+        report = self.scan()
+        self.assertEqual(report["leads"], [])
+        self.assertEqual({(s["kind"], s["line"]) for s in report["signals"]},
+                         {("input_assembly", 1), ("network_call", 2)})
+        self.assertNotIn("provider_call", {s["kind"] for s in report["signals"]})
+
+    def test_size_measurement_does_not_claim_an_enforced_budget(self):
+        self.write("src/prompt.ts", "\n".join([
+            'const prompt = history.join("\\n");',
+            'const measured = Buffer.byteLength(prompt, "utf8");',
+            'const bytes = new TextEncoder().encode(prompt);',
+        ]))
+        report = self.scan()
+        self.assertEqual(report["leads"], [])
+        self.assertEqual({s["kind"] for s in report["signals"]},
+                         {"input_assembly", "input_measurement"})
+        self.assertEqual(len(report["signals"]), 3)
+
+    def test_non_ai_fetch_and_join_remain_neutral_markers(self):
+        self.write("src/weather.js", 'fetch("/weather");\n["a", "b"].join(",");')
+        report = self.scan()
+        self.assertEqual(report["leads"], [])
+        self.assertEqual({s["kind"] for s in report["signals"]},
+                         {"network_call", "input_assembly"})
+
     def test_observed_controls_and_provider_calls_are_recorded_separately(self):
         self.write("route.ts", "\n".join([
             "const session = await auth();",
